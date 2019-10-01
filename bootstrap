@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# Clone .env template
+echo "Starting to do after clone tasks..."
+
+if [[ ! -f ./.env ]]; then
+    echo "Clone .env"
+    cp ./bootstraps/.env.sample ./.env
+fi
+
+if [[ ! -f ./config/master.key ]]; then
+    echo "Clone master.key"
+    cp ./bootstraps/master.key.sample ./config/master.key
+fi
+
+echo "Done!"

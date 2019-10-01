@@ -1,6 +1,11 @@
 {
   "name": "old_recipe",
   "private": true,
+  "engines": {
+    "node": ">= 10.16.3",
+    "npm": ">= 6.9.0",
+    "yarn": ">= 1.17.3"
+  },
   "dependencies": {
     "@babel/preset-react": "^7.0.0",
     "@rails/actioncable": "^6.0.0-alpha",

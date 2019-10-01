@@ -1,0 +1,123 @@
+Index: app/controllers/application_controller.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/controllers/application_controller.rb	(date 1569859448000)
++++ app/controllers/application_controller.rb	(date 1569860539000)
+@@ -1,4 +1,19 @@
+ # frozen_string_literal: true
+ 
+ class ApplicationController < ActionController::Base
++  before_action :authenticate_user
++
++  private
++
++  def authenticate_user
++    return if request.headers['Authorization'].blank?
++
++    authenticate_or_request_with_http_token do |token|
++      jwt_payload = JWT.decode(token, Rails.application.secrets.secret_key_base).first
++
++      @current_user_id = jwt_payload['id']
++    rescue JWT::ExpiredSignature, JWT::VerificationError, JWT::DecodeError
++      head :unauthorized
++    end
++  end
+ end
+Index: app/controllers/devise/sessions_controller.rb
+===================================================================
+--- app/controllers/devise/sessions_controller.rb	(date 1569860539000)
++++ app/controllers/devise/sessions_controller.rb	(date 1569860539000)
+@@ -0,0 +1,13 @@
++# frozen_string_literal: true
++
++class SessionsController < Devise::SessionsController
++  def create
++    user = User.find_by(email: sign_in_params[:email])
++
++    if user&.valid_password?(sign_in_params[:password])
++      @current_user = user
++    else
++      render json: { errors: { 'email or password' => ['is invalid'] } }, status: :unprocessable_entity
++    end
++  end
++end
+Index: app/models/user.rb
+===================================================================
+--- app/models/user.rb	(date 1569859448000)
++++ app/models/user.rb	(date 1569860539000)
+@@ -6,4 +6,16 @@
+   devise :database_authenticatable, :registerable,
+          :recoverable, :rememberable, :validatable,
+          :confirmable, :trackable
++
++  # validates :username,
++  #           uniqueness: { case_sensitive: false },
++  #           presence: true,
++  #           allow_blank: false,
++  #           format: { with: /\A[a-zA-Z0-9]+\z/ }
++
++  def generate_jwt
++    JWT.encode({ id: id,
++                 exp: 60.days.from_now.to_i },
++               Rails.application.secrets.secret_key_base)
++  end
+ end
+Index: app/views/devise/registrations/create.json.jbuilder
+===================================================================
+--- app/views/devise/registrations/create.json.jbuilder	(date 1569860539000)
++++ app/views/devise/registrations/create.json.jbuilder	(date 1569860539000)
+@@ -0,0 +1,5 @@
++# frozen_string_literal: true
++
++json.user do |json|
++  json.partial! 'users/user', user: current_user
++end
+Index: app/views/devise/sessions/create.json.jbuilder
+===================================================================
+--- app/views/devise/sessions/create.json.jbuilder	(date 1569860539000)
++++ app/views/devise/sessions/create.json.jbuilder	(date 1569860539000)
+@@ -0,0 +1,5 @@
++# frozen_string_literal: true
++
++json.user do |json|
++  json.partial! 'users/user', user: current_user
++end
+Index: app/views/users/_user.json.jbuilder
+===================================================================
+--- app/views/users/_user.json.jbuilder	(date 1569860539000)
++++ app/views/users/_user.json.jbuilder	(date 1569860539000)
+@@ -0,0 +1,4 @@
++# frozen_string_literal: true
++
++json.call(user, :id, :email)
++json.token user.generate_jwt
+Index: config/routes.rb
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- config/routes.rb	(date 1569859448000)
++++ config/routes.rb	(date 1569860539000)
+@@ -2,13 +2,19 @@
+ 
+ # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+ Rails.application.routes.draw do
+-  devise_for :users
+   namespace :api do
+     namespace :v1 do
+       resources :recipes, except: %i[new edit update]
+     end
+   end
+ 
++  scope 'api/v1', defaults: { format: :json } do
++    devise_for :users,
++               controllers: {
++                 sessions: 'devise/sessions'
++               }
++  end
++
+   root 'homepage#index'
+   get '*path' => redirect('/')
+ end
