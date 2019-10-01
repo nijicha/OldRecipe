@@ -34,3 +34,11 @@
     width: 100%;
     opacity: 0.4;
 }
+
+/* Alert box */
+.custom-alert-box {
+    margin-bottom: 0;
+    position: fixed;
+    width: 100%;
+    z-index: 10000;
+}
