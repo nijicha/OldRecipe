@@ -6,7 +6,7 @@ import './Index.js'
 
 import App from '../components/App'
 
-document.addEventListener('turbolinks:load', function() {
+document.addEventListener('turbolinks:load', () => {
   render(
     <App />,
     document.body.appendChild(document.createElement('div'))
