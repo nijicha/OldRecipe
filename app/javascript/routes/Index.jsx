@@ -14,6 +14,10 @@ export default (
       <Route path='/new_recipe' exact component={NewRecipe} />
 
       {/* Root */}
+      {/* For history go back */}
+      <Route path='/' exact component={Home} />
+
+      {/* Fallback component */}
       <Route component={Home} />
     </Switch>
   </Router>
