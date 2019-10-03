@@ -8,10 +8,13 @@ import NewRecipe from '../components/Recipes/NewRecipe'
 export default (
   <Router>
     <Switch>
-      <Route path='/' exact component={Home} />
+      {/* Recipes */}
       <Route path='/recipes' exact component={Recipes} />
       <Route path='/recipes/:id' exact component={Recipe} />
       <Route path='/new_recipe' exact component={NewRecipe} />
+
+      {/* Root */}
+      <Route component={Home} />
     </Switch>
   </Router>
 )

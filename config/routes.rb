@@ -9,5 +9,5 @@ Rails.application.routes.draw do
   end
 
   root 'homepage#index'
-  get '*path' => redirect('/')
+  get '*path', to: 'homepage#index'
 end
